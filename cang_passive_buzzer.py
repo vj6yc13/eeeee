@@ -111,5 +111,3 @@ if __name__ == "__main__":
         print(f"An error occurred: {e}")
     finally:
         unexport_gpio(gpio_pin)
-
-    sys.exit(0)
