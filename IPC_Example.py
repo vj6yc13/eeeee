@@ -90,7 +90,6 @@ def ipc_listener(gpio_pin):
                 print(f"Received unknown note: {note}")
             time.sleep(0.1)  # IPC 데이터 처리 후 잠시 대기
 
-
 def sendtoCAN(channel, canId, sndDataHex):
     sndData = parse_hex_data(sndDataHex)
     uiLength = len(sndData)
@@ -135,40 +134,4 @@ def main():
             elif args.sndDataStr:
                 sndData = IPC_Library.parse_string_data(args.sndDataStr)
             else:
-                sndData = IPC_Library.parse_hex_data(args.defaultHex)
-
-            uiLength = len(sndData)
-
-            print(f"file_path: {args.file_path}")
-            print(f"channel: {args.channel}")
-            print(f"uiCmd1: {uiCmd1}")
-            print(f"uiCmd2: {uiCmd2}")
-            print(f"uiCmd3: {uiCmd3}") 
-            print(f"sndData: {sndData}")
-            print(f"uiLength: {uiLength}")
-
-            sendtoCAN(args.channel, uiCmd1, args.sndDataHex)  # 송신 데이터 처리
-
-        elif args.mode == "rev":
-            # IPC 수신 처리 스레드 시작
-            micom_thread = threading.Thread(target=IPC_Library.IPC_ReceivePacketFromIPCHeader, args=("/dev/tcc_ipc_micom", 1))
-            micom_thread.start()
-
-            # IPC 데이터를 통해 음을 재생하는 부분
-            ipc_listener(gpio_pin)
-
-        else:
-            print("Invalid mode. Use 'snd' or 'rev'.")
-            return
-
-    except KeyboardInterrupt:
-        print("\nOperation stopped by User")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    finally:
-        unexport_gpio(gpio_pin)
-
-    sys.exit(0)
-
-if __name__ == "__main__":
-    main()
+                sndData = IPC_Library.parse_hex_data(args.defaultHex
