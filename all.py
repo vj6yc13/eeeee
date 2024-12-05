@@ -129,11 +129,8 @@ def display_lcd():
     lcd_init()
     try:
         while True:
-            lcd_string("Hello, World!", LCD_LINE_1)
-            lcd_string("This is LCD!", LCD_LINE_2)
-            time.sleep(3)
-            lcd_string("Playing Music", LCD_LINE_1)
-            lcd_string("Wait a moment!", LCD_LINE_2)
+            lcd_string("Let's play!", LCD_LINE_1)
+            lcd_string("~Jingle Bell~", LCD_LINE_2)
             time.sleep(3)
     except KeyboardInterrupt:
         print("\nLCD stopped.")
