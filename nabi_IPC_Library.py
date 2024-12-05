@@ -21,4 +21,3 @@ try:
 except KeyboardInterrupt: #ctrl + C하면 빠져나옴
     pass
 p.stop() #PWM종료
-[출처] 라즈베리파이4로 수동부저(Passive Buzzer)연결하기|작성자 하와차
