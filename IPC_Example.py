@@ -80,7 +80,7 @@ def play_tone(gpio_number, frequency, duration):
 def ipc_listener(gpio_pin):
     while True:
         if IPC_Library.received_pucData:
-            note = IPC_Library.received_pucData[0]  # 첫 번째 바이트로 음계 결정
+            note = IPC_Library.received_pucData.pop(0)  # 첫 번째 바이트로 음계 결정
             duration = 0.5  # 기본 재생 시간
             
             if note in FREQUENCIES:
@@ -134,4 +134,12 @@ def main():
             elif args.sndDataStr:
                 sndData = IPC_Library.parse_string_data(args.sndDataStr)
             else:
-                sndData = IPC_Library.parse_hex_data(args.defaultHex
+                sndData = IPC_Library.parse_hex_data(args.defaultHex)
+            sendtoCAN(args.channel, args.uiCmd1, sndData)
+        elif args.mode == "rev":
+            receiveFromCAN()
+            ipc_listener(gpio_pin)
+    except KeyboardInterrupt:
+        print("\nOperation stopped by User")
+    finally:
+        unexport_gpio(gpio_pin)
