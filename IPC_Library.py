@@ -2,9 +2,7 @@ import sys
 import os
 import time
 import threading
-import array
 
-# GPIO 관련 경로 및 음계 주파수 정의
 GPIO_EXPORT_PATH = "/sys/class/gpio/export"
 GPIO_UNEXPORT_PATH = "/sys/class/gpio/unexport"
 GPIO_DIRECTION_PATH_TEMPLATE = "/sys/class/gpio/gpio{}/direction"
@@ -22,11 +20,6 @@ FREQUENCIES = {
     8: 523.25   # C5
 }
 
-# IPC 관련 정의
-IPC_SYNC = 0xFF
-IPC_START1 = 0x55
-IPC_START2 = 0xAA
-IPC_MAX_PACKET_SIZE = 0x400
 received_pucData = []  # IPC에서 수신한 데이터 저장
 
 # GPIO 유틸리티 함수
@@ -83,26 +76,14 @@ def ipc_listener(gpio_pin):
                 print(f"Received unknown note: {note}")
             time.sleep(0.1)  # IPC 데이터 처리 후 잠시 대기
 
-# IPC 패킷 처리 함수
-def IPC_CalcCrc16(data, size, init):
-    crc = init
-    for i in range(size):
-        crc ^= (data[i] << 8)
-        for _ in range(8):
-            if (crc & 0x8000):
-                crc = (crc << 1) ^ 0x1021
-            else:
-                crc = crc << 1
-            crc &= 0xFFFF
-    return crc
-
 # IPC 수신 스레드
 def IPC_ReceivePacketFromIPCHeader(file_path):
     global received_pucData
     while True:
-        # 여기에 파일 디스크립터 읽기 로직 추가
-        # 임의 데이터 예제
+        # 여기서 실제 데이터 수신 구현을 해야 합니다.
+        # 임의 데이터 예시 (테스트용)
         received_pucData = [1]  # C 노트 (261.63 Hz) 테스트용
+        time.sleep(1)  # 임의로 1초마다 데이터 수신
 
 # 메인 실행부
 if __name__ == "__main__":
@@ -114,6 +95,7 @@ if __name__ == "__main__":
 
         # IPC 수신 스레드 실행
         ipc_thread = threading.Thread(target=IPC_ReceivePacketFromIPCHeader, args=("/dev/tcc_ipc_micom",))
+        ipc_thread.daemon = True  # 프로그램 종료 시 스레드 종료
         ipc_thread.start()
 
         # GPIO를 사용해 음계 재생
@@ -123,3 +105,4 @@ if __name__ == "__main__":
         print("\nOperation stopped by User")
     finally:
         unexport_gpio(gpio_pin)
+
