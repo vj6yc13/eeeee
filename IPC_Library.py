@@ -22,7 +22,8 @@ FREQUENCIES = {
 
 received_pucData = []  # IPC에서 수신한 데이터 저장
 
-# GPIO 유틸리티 함수
+# GPIO 유틸리티 함수들
+
 def is_gpio_exported(gpio_number):
     gpio_base_path = GPIO_BASE_PATH_TEMPLATE.format(gpio_number)
     return os.path.exists(gpio_base_path)
@@ -66,7 +67,7 @@ def play_tone(gpio_number, frequency, duration):
 def ipc_listener(gpio_pin):
     while True:
         if received_pucData:
-            note = received_pucData[0]  # 첫 번째 바이트로 음계 결정
+            note = received_pucData.pop(0)  # 첫 번째 바이트로 음계 결정
             duration = 0.5  # 기본 재생 시간
             
             if note in FREQUENCIES:
@@ -80,9 +81,9 @@ def ipc_listener(gpio_pin):
 def IPC_ReceivePacketFromIPCHeader(file_path):
     global received_pucData
     while True:
-        # 여기서 실제 데이터 수신 구현을 해야 합니다.
+        # 여기에 실제 데이터 수신 구현을 해야 합니다.
         # 임의 데이터 예시 (테스트용)
-        received_pucData = [1]  # C 노트 (261.63 Hz) 테스트용
+        received_pucData = [1, 2, 3]  # C, D, E 노트 테스트용
         time.sleep(1)  # 임의로 1초마다 데이터 수신
 
 # 메인 실행부
@@ -105,4 +106,3 @@ if __name__ == "__main__":
         print("\nOperation stopped by User")
     finally:
         unexport_gpio(gpio_pin)
-
