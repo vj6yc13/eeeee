@@ -123,10 +123,10 @@ if __name__ == "__main__":
     try:
         lcd_init()
         while True:
-            lcd_string("hey", LCD_LINE_1)
+            lcd_string("♬♪hey", LCD_LINE_1)
             lcd_string("hihi", LCD_LINE_2)
             time.sleep(3)
-            lcd_string("byebye", LCD_LINE_1)
+            lcd_string("byebye♬♪", LCD_LINE_1)
             lcd_string("Goodbye!", LCD_LINE_2)
             time.sleep(3)
     except KeyboardInterrupt:
