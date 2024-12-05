@@ -1,27 +1,33 @@
 import sys
 import os
 import time
-from IPC_Library import IPC_SendPacketWithIPCHeader, TCC_IPC_CMD_CA72_EDUCATION_CAN_DEMO, IPC_IPC_CMD_CA72_EDUCATION_CAN_DEMO_START
-from IPC_Library import parse_hex_data
 
-
-
+# GPIO 관련 경로 및 설정
 GPIO_EXPORT_PATH = "/sys/class/gpio/export"
 GPIO_UNEXPORT_PATH = "/sys/class/gpio/unexport"
 GPIO_DIRECTION_PATH_TEMPLATE = "/sys/class/gpio/gpio{}/direction"
 GPIO_VALUE_PATH_TEMPLATE = "/sys/class/gpio/gpio{}/value"
 GPIO_BASE_PATH_TEMPLATE = "/sys/class/gpio/gpio{}"
 
+# 음계 주파수 (Hz)
 FREQUENCIES = {
-    'C': 261.63,  
-    'D': 293.66,  
-    'E': 329.63,  
-    'F': 349.23,  
-    'G': 392.00,  
-    'A': 440.00,  
-    'B': 493.88,  
-    'C5': 523.25  
+    'C': 261.63,  # 도
+    'D': 293.66,  # 레
+    'E': 329.63,  # 미
+    'F': 349.23,  # 파
+    'G': 392.00,  # 솔
+    'A': 440.00,  # 라
+    'B': 493.88,  # 시
+    'C5': 523.25  # 높은 도
 }
+
+# 나비야 멜로디 (음과 길이)
+# (음 이름, 길이(초))
+MELODY = [
+    ('C', 0.5), ('D', 0.5), ('E', 0.5), ('C', 0.5),
+    ('E', 0.5), ('F', 0.5), ('G', 1.0),
+    ('E', 0.5), ('F', 0.5), ('E', 0.5), ('D', 0.5), ('C', 1.0),
+]
 
 def is_gpio_exported(gpio_number):
     gpio_base_path = GPIO_BASE_PATH_TEMPLATE.format(gpio_number)
@@ -73,20 +79,18 @@ def play_tone(gpio_number, frequency, duration):
         set_gpio_value(gpio_number, 0)
         time.sleep(half_period)
 
-
-
 if __name__ == "__main__":
-    gpio_pin = 89  
+    gpio_pin = 89  # 제공된 핀 번호 유지
 
     try:
         export_gpio(gpio_pin)
         set_gpio_direction(gpio_pin, "out")
 
-        for note, freq in FREQUENCIES.items():
-            print(f"Playing {note} at {freq} Hz") 
-            play_tone(gpio_pin, freq, 0.5)
-            time.sleep(0.1)
-
+        for note, length in MELODY:
+            if note in FREQUENCIES:
+                print(f"Playing {note} at {FREQUENCIES[note]} Hz")
+                play_tone(gpio_pin, FREQUENCIES[note], length)
+            time.sleep(0.1)  # 음 사이의 간격
     except KeyboardInterrupt:
         print("\nOperation stopped by User")
     except Exception as e:
@@ -96,4 +100,3 @@ if __name__ == "__main__":
 
     sys.exit(0)
 
-        
