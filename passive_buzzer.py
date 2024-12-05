@@ -5,10 +5,6 @@ from IPC_Library import IPC_SendPacketWithIPCHeader, TCC_IPC_CMD_CA72_EDUCATION_
 from IPC_Library import parse_hex_data
 
 
-import sys
-import os
-import time
-
 
 GPIO_EXPORT_PATH = "/sys/class/gpio/export"
 GPIO_UNEXPORT_PATH = "/sys/class/gpio/unexport"
