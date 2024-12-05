@@ -130,7 +130,7 @@ def display_lcd():
     try:
         while True:
             lcd_string("Let's play!", LCD_LINE_1)
-            lcd_string("~Jingle Bell~", LCD_LINE_2)
+            lcd_string("**Jingle Bell**", LCD_LINE_2)
             time.sleep(3)
     except KeyboardInterrupt:
         print("\nLCD stopped.")
