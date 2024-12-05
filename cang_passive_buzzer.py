@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+import can
 from IPC_Library import IPC_SendPacketWithIPCHeader, TCC_IPC_CMD_CA72_EDUCATION_CAN_DEMO, IPC_IPC_CMD_CA72_EDUCATION_CAN_DEMO_START
 from IPC_Library import parse_hex_data
 
@@ -80,6 +81,37 @@ def play_tone(gpio_number, frequency, duration, note):
     print(f"Playing {note} at {frequency} Hz") 
     sendtoCAN(0, 1, "1")  # CAN 메시지 전송
 
+def listen_for_can_messages():
+    # CAN 인터페이스 설정 (예시: 'can0' 사용)
+    bus = can.interface.Bus(channel='can0', bustype='socketcan')
+    
+    while True:
+        # CAN 메시지 수신
+        message = bus.recv()  # 메시지를 기다리며 수신
+        
+        if message is not None:
+            can_data = message.data.decode('utf-8')  # 수신된 데이터를 문자열로 변환
+            print(f"Received CAN message: {can_data}")
+            
+            if can_data == 'C':
+                play_tone(gpio_pin, FREQUENCIES['C'], 0.5, 'C')
+            elif can_data == 'D':
+                play_tone(gpio_pin, FREQUENCIES['D'], 0.5, 'D')
+            elif can_data == 'E':
+                play_tone(gpio_pin, FREQUENCIES['E'], 0.5, 'E')
+            elif can_data == 'F':
+                play_tone(gpio_pin, FREQUENCIES['F'], 0.5, 'F')
+            elif can_data == 'G':
+                play_tone(gpio_pin, FREQUENCIES['G'], 0.5, 'G')
+            elif can_data == 'A':
+                play_tone(gpio_pin, FREQUENCIES['A'], 0.5, 'A')
+            elif can_data == 'B':
+                play_tone(gpio_pin, FREQUENCIES['B'], 0.5, 'B')
+            elif can_data == 'C5':
+                play_tone(gpio_pin, FREQUENCIES['C5'], 0.5, 'C5')
+
+            time.sleep(0.1)
+
 if __name__ == "__main__":
     gpio_pin = 89  
 
@@ -87,10 +119,8 @@ if __name__ == "__main__":
         export_gpio(gpio_pin)
         set_gpio_direction(gpio_pin, "out")
 
-        for note, freq in FREQUENCIES.items():
-            # 각 음을 연주하고, CAN 메시지를 전송
-            play_tone(gpio_pin, freq, 0.5, note)
-            time.sleep(0.1)
+        # CAN 메시지를 수신하고 그에 맞는 음을 연주
+        listen_for_can_messages()
 
     except KeyboardInterrupt:
         print("\nOperation stopped by User")
