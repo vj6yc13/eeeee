@@ -96,9 +96,10 @@ if __name__ == "__main__":
         export_gpio(gpio_pin)
         set_gpio_direction(gpio_pin, "out")
 
+        # IPC_ReceivePacketFromIPCHeader는 인자가 하나만 필요하므로 인자를 맞춰서 호출합니다.
         micom_thread = threading.Thread(
             target=IPC_Library.IPC_ReceivePacketFromIPCHeader,
-            args=("/dev/tcc_ipc_micom", )
+            args=("/dev/tcc_ipc_micom",)  # 튜플로 인자를 하나만 전달
         )
         micom_thread.start()
 
@@ -112,5 +113,3 @@ if __name__ == "__main__":
         unexport_gpio(gpio_pin)
 
     sys.exit(0)
-
-        
