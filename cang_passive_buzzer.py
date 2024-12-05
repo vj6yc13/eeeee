@@ -1,8 +1,8 @@
 import sys
 import os
 import time
-import threading
-import IPC_Library
+from IPC_Library import IPC_SendPacketWithIPCHeader, TCC_IPC_CMD_CA72_EDUCATION_CAN_DEMO, IPC_IPC_CMD_CA72_EDUCATION_CAN_DEMO_START
+from IPC_Library import parse_hex_data
 
 GPIO_EXPORT_PATH = "/sys/class/gpio/export"
 GPIO_UNEXPORT_PATH = "/sys/class/gpio/unexport"
@@ -11,14 +11,14 @@ GPIO_VALUE_PATH_TEMPLATE = "/sys/class/gpio/gpio{}/value"
 GPIO_BASE_PATH_TEMPLATE = "/sys/class/gpio/gpio{}"
 
 FREQUENCIES = {
-    1: 261.63,  # C
-    2: 293.66,  # D
-    3: 329.63,  # E
-    4: 349.23,  # F
-    5: 392.00,  # G
-    6: 440.00,  # A
-    7: 493.88,  # B
-    8: 523.25   # C5
+    'C': 261.63,  
+    'D': 293.66,  
+    'E': 329.63,  
+    'F': 349.23,  
+    'G': 392.00,  
+    'A': 440.00,  
+    'B': 493.88,  
+    'C5': 523.25  
 }
 
 def is_gpio_exported(gpio_number):
@@ -60,11 +60,12 @@ def set_gpio_value(gpio_number, value):
         print(f"Error setting GPIO {gpio_number} value to {value}: {e}")
         sys.exit(1)
 
-def play_tone(gpio_number, frequency, duration):
-    if frequency <= 0:
-        print("Invalid frequency: Skipping tone")
-        return
-    
+def sendtoCAN(channel, canId, sndDataHex):
+    sndData = parse_hex_data(sndDataHex)
+    uiLength = len(sndData)
+    ret = IPC_SendPacketWithIPCHeader("/dev/tcc_ipc_micom", channel, TCC_IPC_CMD_CA72_EDUCATION_CAN_DEMO, IPC_IPC_CMD_CA72_EDUCATION_CAN_DEMO_START, canId, sndData, uiLength)
+
+def play_tone(gpio_number, frequency, duration, note):
     period = 1.0 / frequency
     half_period = period / 2
     end_time = time.time() + duration
@@ -74,20 +75,10 @@ def play_tone(gpio_number, frequency, duration):
         time.sleep(half_period)
         set_gpio_value(gpio_number, 0)
         time.sleep(half_period)
-
-def ipc_listener(gpio_pin):
-    while True:
-        if IPC_Library.received_pucData:
-            note = IPC_Library.received_pucData[0]  # 첫 번째 바이트로 음계 결정
-            duration = 0.5  # 기본 재생 시간
-            
-            if note in FREQUENCIES:
-                print(f"Playing tone for note {note} at frequency {FREQUENCIES[note]} Hz")
-                play_tone(gpio_pin, FREQUENCIES[note], duration)
-            else:
-                print(f"Received unknown note: {note}")
-            time.sleep(0.1)  # IPC 데이터 처리 후 잠시 대기
-
+        
+    # 전송 후 메시지를 CAN에 보내기
+    print(f"Playing {note} at {frequency} Hz") 
+    sendtoCAN(0, 1, "1")  # CAN 메시지 전송
 
 if __name__ == "__main__":
     gpio_pin = 89  
@@ -96,14 +87,10 @@ if __name__ == "__main__":
         export_gpio(gpio_pin)
         set_gpio_direction(gpio_pin, "out")
 
-        # IPC_ReceivePacketFromIPCHeader는 인자가 하나만 필요하므로 인자를 맞춰서 호출합니다.
-        micom_thread = threading.Thread(
-            target=IPC_Library.IPC_ReceivePacketFromIPCHeader,
-            args=("/dev/tcc_ipc_micom",)  # 튜플로 인자를 하나만 전달
-        )
-        micom_thread.start()
-
-        ipc_listener(gpio_pin)
+        for note, freq in FREQUENCIES.items():
+            # 각 음을 연주하고, CAN 메시지를 전송
+            play_tone(gpio_pin, freq, 0.5, note)
+            time.sleep(0.1)
 
     except KeyboardInterrupt:
         print("\nOperation stopped by User")
@@ -111,3 +98,5 @@ if __name__ == "__main__":
         print(f"An error occurred: {e}")
     finally:
         unexport_gpio(gpio_pin)
+
+    sys.exit(0)
