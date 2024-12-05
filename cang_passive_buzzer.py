@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
         micom_thread = threading.Thread(
             target=IPC_Library.IPC_ReceivePacketFromIPCHeader,
-            args=("/dev/tcc_ipc_micom", 1)
+            args=("/dev/tcc_ipc_micom", )
         )
         micom_thread.start()
 
