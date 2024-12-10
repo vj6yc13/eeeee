@@ -1,136 +1,51 @@
-import os
+#!/usr/bin/env python
+from __future__ import print_function
+# Author: Sarah Knepper <sarah.knepper@intel.com>
+# Copyright (c) 2015 Intel Corporation.
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 import time
+from upm import pyupm_buzzer as upmBuzzer
 
-# GPIO path
-GPIO_BASE_PATH = "/sys/class/gpio"
-GPIO_EXPORT_PATH = os.path.join(GPIO_BASE_PATH, "export")
-GPIO_UNEXPORT_PATH = os.path.join(GPIO_BASE_PATH, "unexport")
+def main():
+    # Create the buzzer object using GPIO pin 5
+    buzzer = upmBuzzer.Buzzer(5)
 
-# GPIO pin control function
-def gpio_export(pin):
-    if not os.path.exists(os.path.join(GPIO_BASE_PATH, f"gpio{pin}")):
-        with open(GPIO_EXPORT_PATH, 'w') as f:
-            f.write(str(pin))
+    chords = [upmBuzzer.BUZZER_DO, upmBuzzer.BUZZER_RE, upmBuzzer.BUZZER_MI,
+              upmBuzzer.BUZZER_FA, upmBuzzer.BUZZER_SOL, upmBuzzer.BUZZER_LA,
+              upmBuzzer.BUZZER_SI];
 
-def gpio_unexport(pin):
-    with open(GPIO_UNEXPORT_PATH, 'w') as f:
-        f.write(str(pin))
+    # Print sensor name
+    print(buzzer.name())
 
-def gpio_set_direction(pin, direction):
-    direction_path = os.path.join(GPIO_BASE_PATH, f"gpio{pin}", "direction")
-    with open(direction_path, 'w') as f:
-        f.write(direction)
+    # Play sound (DO, RE, MI, etc.), pausing for 0.1 seconds between notes
+    for chord_ind in range (0,7):
+        # play each note for a half second
+        print(buzzer.playSound(chords[chord_ind], 500000))
+        time.sleep(0.1)
 
-def gpio_write(pin, value):
-    value_path = os.path.join(GPIO_BASE_PATH, f"gpio{pin}", "value")
-    with open(value_path, 'w') as f:
-        f.write(str(value))
+    print("exiting application")
 
-def gpio_read(pin):
-    value_path = os.path.join(GPIO_BASE_PATH, f"gpio{pin}", "value")
-    with open(value_path, 'r') as f:
-        return f.read().strip()
+    # Delete the buzzer object
+    del buzzer
 
-LCD_RS = 117  
-LCD_E  = 121  
-LCD_D4 = 114  
-LCD_D5 = 113  
-LCD_D6 = 112  
-LCD_D7 = 61  
-
-LCD_WIDTH = 16  
-LCD_CHR = "1"
-LCD_CMD = "0"
-
-LCD_LINE_1 = 0x80 
-LCD_LINE_2 = 0xC0 
-
-E_PULSE = 0.0005
-E_DELAY = 0.0005
-
-def lcd_init():
-    gpio_export(LCD_E)
-    gpio_export(LCD_RS)
-    gpio_export(LCD_D4)
-    gpio_export(LCD_D5)
-    gpio_export(LCD_D6)
-    gpio_export(LCD_D7)
-
-    gpio_set_direction(LCD_E, "out")
-    gpio_set_direction(LCD_RS, "out")
-    gpio_set_direction(LCD_D4, "out")
-    gpio_set_direction(LCD_D5, "out")
-    gpio_set_direction(LCD_D6, "out")
-    gpio_set_direction(LCD_D7, "out")
-
-    lcd_byte(0x33, LCD_CMD)
-    lcd_byte(0x32, LCD_CMD)
-    lcd_byte(0x28, LCD_CMD)
-    lcd_byte(0x0C, LCD_CMD)
-    lcd_byte(0x06, LCD_CMD)
-    lcd_byte(0x01, LCD_CMD)
-    time.sleep(E_DELAY)
-
-def lcd_byte(bits, mode):
-    gpio_write(LCD_RS, mode)
-    gpio_write(LCD_D4, "0")
-    gpio_write(LCD_D5, "0")
-    gpio_write(LCD_D6, "0")
-    gpio_write(LCD_D7, "0")
-
-    if bits & 0x10 == 0x10:
-        gpio_write(LCD_D4, "1")
-    if bits & 0x20 == 0x20:
-        gpio_write(LCD_D5, "1")
-    if bits & 0x40 == 0x40:
-        gpio_write(LCD_D6, "1")
-    if bits & 0x80 == 0x80:
-        gpio_write(LCD_D7, "1")
-
-    lcd_toggle_enable()
-
-    gpio_write(LCD_D4, "0")
-    gpio_write(LCD_D5, "0")
-    gpio_write(LCD_D6, "0")
-    gpio_write(LCD_D7, "0")
-
-    if bits & 0x01 == 0x01:
-        gpio_write(LCD_D4, "1")
-    if bits & 0x02 == 0x02:
-        gpio_write(LCD_D5, "1")
-    if bits & 0x04 == 0x04:
-        gpio_write(LCD_D6, "1")
-    if bits & 0x08 == 0x08:
-        gpio_write(LCD_D7, "1")
-
-    lcd_toggle_enable()
-
-def lcd_toggle_enable():
-    time.sleep(E_DELAY)
-    gpio_write(LCD_E, "1")
-    time.sleep(E_PULSE)
-    gpio_write(LCD_E, "0")
-    time.sleep(E_DELAY)
-
-def lcd_string(message, line):
-    message = message.ljust(LCD_WIDTH, " ")
-    lcd_byte(line, LCD_CMD)
-    for i in range(LCD_WIDTH):
-        lcd_byte(ord(message[i]), LCD_CHR)
-
-# main
-if __name__ == "__main__":
-    try:
-        lcd_init()
-        while True:
-            lcd_string("☆hey**", LCD_LINE_1)
-            lcd_string("hihi", LCD_LINE_2)
-    except KeyboardInterrupt:
-        print("\nProgram stopped by User")
-    finally:
-        gpio_unexport(LCD_E)
-        gpio_unexport(LCD_RS)
-        gpio_unexport(LCD_D4)
-        gpio_unexport(LCD_D5)
-        gpio_unexport(LCD_D6)
-        gpio_unexport(LCD_D7)
+if __name__ == '__main__':
+    main()
